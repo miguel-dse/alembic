@@ -542,7 +542,10 @@ class ScriptDirectory:
 
 
         """
-        util.load_python_file(self.dir, "env.py")
+        try:
+            util.load_python_file(self.dir, "env.py")
+        except ImportError as e:
+            util.load_python_file(self.dir, "env.pye")
 
     @property
     def env_py_location(self) -> str:
