@@ -111,7 +111,7 @@ def load_python_file(
     module_id = re.sub(r"\W", "_", filename)
     path = dir_ / filename
     ext = path.suffix
-    if ext == ".py":
+    if ext == ".py" or ext == ".pye":
         if path.exists():
             module = load_module_py(module_id, path)
         else:
