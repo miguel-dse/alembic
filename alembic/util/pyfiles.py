@@ -9,6 +9,7 @@ import importlib.util
 import os
 import pathlib
 import re
+import sys
 import tempfile
 from types import ModuleType
 from typing import Any
@@ -131,10 +132,53 @@ def load_module_py(
     module_id: str, path: Union[str, os.PathLike[str]]
 ) -> ModuleType:
     spec = importlib.util.spec_from_file_location(module_id, path)
-    assert spec
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)  # type: ignore
+    if spec is not None and spec.loader is not None:
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)  # type: ignore
+        return module
+
+    module_name = _module_name_from_path(path)
+    if module_name is None:
+        raise ImportError(f"Can't import Python file {path}")
+
+    importlib.invalidate_caches()
+    already_loaded = module_name in sys.modules
+    module = importlib.import_module(module_name)
+    if already_loaded:
+        module = importlib.reload(module)
     return module
+
+
+def _module_name_from_path(
+    path: Union[str, os.PathLike[str]],
+) -> Optional[str]:
+    path = pathlib.Path(path).resolve()
+
+    for entry in sys.path:
+        if not entry:
+            entry_path = pathlib.Path.cwd()
+        else:
+            entry_path = pathlib.Path(entry)
+
+        try:
+            relative_path = path.relative_to(entry_path.resolve())
+        except ValueError:
+            continue
+
+        module_parts = list(relative_path.parts)
+        last = module_parts[-1]
+
+        if last == "__init__.py":
+            module_parts.pop()
+        else:
+            module_parts[-1] = pathlib.Path(last).stem
+
+        if not module_parts:
+            return None
+
+        return ".".join(module_parts)
+
+    return None
 
 
 def _preserving_path_as_str(path: Union[str, os.PathLike[str]]) -> str:
