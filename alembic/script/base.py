@@ -44,7 +44,7 @@ except ImportError:
     ZoneInfo = None  # type: ignore[assignment, misc]
 
 _sourceless_rev_file = re.compile(r"(?!\.\#|__init__)(.*\.py)(c|o)?$")
-_only_source_rev_file = re.compile(r"(?!\.\#|__init__)(.*\.py)$")
+_only_source_rev_file = re.compile(r"(?!\.\#|__init__)(.*\.pye?)$")
 _legacy_rev = re.compile(r"([a-f0-9]+)\.py$")
 _slug_re = re.compile(r"\w+")
 _default_file_template = "%(rev)s_%(slug)s"
